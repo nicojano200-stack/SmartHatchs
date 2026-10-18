@@ -1,182 +1,67 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1b7f79">
-
-  <title>SmartHatch · IoT Egg Incubator App</title>
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap"
-    rel="stylesheet"
-  >
-
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b7f79">
+<title>SmartHatch · IoT Egg Incubator App</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-  <div class="phone">
+<div class="phone">
 
-    <!-- SPLASH SCREEN -->
-    <section id="splash" class="sc">
-      <div class="egg pop">
-        <img
-          src="egg-logo.png"
-          alt="SmartHatch egg logo"
-          class="egg-logo"
-        >
-      </div>
+  <section id="splash" class="sc">
+    <div class="egg pop"><div class="sprite"></div></div>
+    <h2 id="nm" class="car"></h2>
+    <small id="tg">Smart incubation for small farms</small>
+  </section>
 
-      <h2 id="nm" class="car"></h2>
-      <small id="tg">Smart incubation for small farms</small>
-    </section>
+  <section id="login" class="sc off">
+    <div class="logo"><div class="badge"><div class="sprite sm"></div></div></div>
+    <h2 id="lt">Welcome Back</h2>
+    <p id="ls">Login to monitor your incubator</p>
+    <div class="seg" id="tabsL"><button class="on" onclick="lmode('in')">Login</button><button onclick="lmode('up')">Sign up</button></div>
+    <input class="fld off" id="nm2" placeholder="Full name" autocomplete="name">
+    <input class="fld" id="em" type="email" placeholder="Email" autocomplete="email">
+    <input class="fld" id="pw" type="password" placeholder="Password" autocomplete="current-password">
+    <div class="err" id="er"></div>
+    <button class="btn" id="mainB" onclick="doAuth()">Login</button>
+    <button class="lnk" id="fp" onclick="lmode('fg')">Forgot password?</button>
+    <div class="or">or</div>
+    <button class="soc" onclick="social('Google')"><b style="background:#ea4335">G</b>Login with Google</button>
+    <button class="soc" onclick="social('Facebook')"><b style="background:#1877f2">f</b>Login with Facebook</button>
+  </section>
 
-    <!-- LOGIN AND SIGN-UP -->
-    <section id="login" class="sc off">
-      <div class="logo">
-        <img
-          src="egg-logo.png"
-          alt="SmartHatch logo"
-          class="egg-logo"
-        >
-      </div>
+  <section id="ready" class="sc off">
+    <div class="egg bounce"><div class="sprite"></div></div>
+    <h2>SmartHatch</h2>
+    <small id="gu">Your incubator is ready</small>
+    <button class="btn go" id="goBtn">Let’s go</button>
+  </section>
 
-      <h2 id="lt">Welcome Back</h2>
-      <p id="ls">Login to monitor your incubator</p>
-
-      <div class="seg" id="tabsL">
-        <button class="on" onclick="lmode('in')">Login</button>
-        <button onclick="lmode('up')">Sign up</button>
-      </div>
-
-      <input
-        class="fld off"
-        id="nm2"
-        type="text"
-        placeholder="Full name"
-        autocomplete="name"
-      >
-
-      <input
-        class="fld"
-        id="em"
-        type="email"
-        placeholder="Email"
-        autocomplete="email"
-      >
-
-      <input
-        class="fld"
-        id="pw"
-        type="password"
-        placeholder="Password"
-        autocomplete="current-password"
-      >
-
-      <div class="err" id="er" role="alert"></div>
-
-      <button class="btn" id="mainB" onclick="doAuth()">
-        Login
-      </button>
-
-      <button class="lnk" id="fp" onclick="lmode('fg')">
-        Forgot password?
-      </button>
-
-      <div class="or">or</div>
-
-      <button class="soc" onclick="social('Google')">
-        <b style="background:#ea4335">G</b>
-        Login with Google
-      </button>
-
-      <button class="soc" onclick="social('Facebook')">
-        <b style="background:#1877f2">f</b>
-        Login with Facebook
-      </button>
-    </section>
-
-    <!-- INCUBATOR READY SCREEN -->
-    <section id="ready" class="sc off">
-      <div class="egg bounce">
-        <img
-          src="egg-logo.png"
-          alt="SmartHatch egg"
-          class="egg-logo"
-        >
-      </div>
-
-      <h2>SmartHatch</h2>
-      <small id="gu">Your incubator is ready</small>
-
-      <button class="btn go" id="goBtn">
-        Let's go
-      </button>
-    </section>
-
-    <!-- CONNECTION STATUS -->
-    <div id="conn" class="off">
-      <div class="cbox">
-        <h3>Connecting to incubator</h3>
-
-        <ul>
-          <li>Searching for INC-001</li>
-          <li>Joining home Wi-Fi</li>
-          <li>Syncing cloud database</li>
-        </ul>
-      </div>
+  <div id="conn" class="off">
+    <div class="cbox">
+      <h3>Connecting to incubator</h3>
+      <ul>
+        <li>Searching for INC-001</li>
+        <li>Joining home Wi-Fi</li>
+        <li>Syncing cloud database</li>
+      </ul>
     </div>
-
-    <!-- MAIN APP HEADER -->
-    <header>
-      <div>
-        <h1>SmartHatch</h1>
-        <small id="sub"></small>
-      </div>
-
-      <div class="hb">
-        <div
-          class="bell"
-          id="bell"
-          role="button"
-          tabindex="0"
-          aria-label="Alerts"
-        >
-          🔔
-          <b id="bc" class="off">0</b>
-        </div>
-
-        <div
-          class="bell"
-          id="av"
-          role="button"
-          tabindex="0"
-          aria-label="Settings"
-        >
-          👤
-        </div>
-      </div>
-    </header>
-
-    <!-- DYNAMIC APP CONTENT -->
-    <main id="main"></main>
-
-    <!-- BOTTOM NAVIGATION -->
-    <nav id="nav"></nav>
-
-    <!-- NOTIFICATIONS -->
-    <div
-      class="toast off"
-      id="toast"
-      role="status"
-      aria-live="polite"
-    ></div>
-
   </div>
 
-  <script src="app.js"></script>
+  <header>
+    <div><h1>SmartHatch</h1><small id="sub"></small></div>
+    <div class="hb">
+      <div class="bell" id="bell" role="button" tabindex="0" aria-label="Alerts">🔔<b id="bc" class="off">0</b></div>
+      <div class="bell" id="av" role="button" tabindex="0" aria-label="Settings">👤</div>
+    </div>
+  </header>
+  <main id="main"></main>
+  <nav id="nav"></nav>
+  <div class="toast off" id="toast"></div>
+</div>
+<script src="app.js"></script>
 </body>
 </html>
-```
