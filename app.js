@@ -11,6 +11,7 @@ const NAMES = { readings: 'sensor_readings', power_events: 'power_events', alert
 const TH = { tmax: 38.5, tmin: 36.5, blow: 20, push: true, sms: false };
 const S = {
   on: false, busy: false, wifi: true, mains: true, bat: 100, tab: 'home', db: 'readings', user: 'Farmer', email: '',
+  cam: true, camLight: true,
   t: 27, h: 50, stage: 'idle', day: 0, batch: null, fan: true, heater: true, turner: true, uv: false, warm: false,
   sp: { incubate: [37.7, 55], hatch: [37.2, 70], brood: [35, 50], idle: [0, 0] },
   hist: [], last: 0, turnIn: 120, rid: 1, eid: 1, aid: 1, timer: null,
@@ -107,6 +108,58 @@ function csv() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([t], { type: 'text/csv' })); a.download = NAMES[k] + '.csv'; a.click(); toast('Exported ' + NAMES[k] + '.csv');
 }
 
+/* ---------- Camera (simulated feed) ---------- */
+function camTog() { if (offline()) return; S.cam = !S.cam; log('Camera ' + (S.cam ? 'on' : 'off'), 'Changed from app'); render(); }
+function camLight() { if (offline()) return; if (!S.cam) return toast('Turn the camera on first'); S.camLight = !S.camLight; toast('Candling light ' + (S.camLight ? 'on' : 'off')); render(); }
+function snap() {
+  if (!S.cam || !S.wifi) return toast('Camera not available');
+  camDraw();
+  $('cam').toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'eggs-' + now().replace(/:/g, '') + '.png'; a.click(); });
+  log('Snapshot', 'Saved from camera'); toast('Snapshot saved');
+}
+function camCard() {
+  const live = S.cam && S.wifi;
+  return `<div class="card"><div class="row"><h3 style="margin:0">Egg camera</h3>${chip(!S.cam ? 'Off' : S.wifi ? 'Live' : 'No signal', live ? 'ok' : 'bad')}</div>
+<div class="cam"><canvas id="cam" width="320" height="200" aria-label="Live view of eggs in the incubator"></canvas></div>
+<div class="seg" style="margin-top:10px"><button onclick="camTog()">${S.cam ? 'Turn off' : 'Turn on'}</button><button class="${S.camLight ? 'on' : ''}" onclick="camLight()">Light ${S.camLight ? 'on' : 'off'}</button><button onclick="snap()">Snapshot</button></div>
+<p class="mut" style="font-size:12px;margin-top:8px">Prototype view. The real camera feed will replace this.</p></div>`;
+}
+function camDraw() {
+  const c = $('cam'); if (!c) return;
+  const g = c.getContext('2d'), W = c.width, H = c.height, t = Date.now() / 1000;
+  g.fillStyle = '#05100d'; g.fillRect(0, 0, W, H);
+  const txt = (s, x, y, col = '#d7f5e6', al = 'left') => { g.font = '600 11px ui-monospace,Menlo,monospace'; g.fillStyle = col; g.textAlign = al; g.fillText(s, x, y); };
+  if (!S.cam || !S.wifi) {
+    if (S.cam) for (let i = 0; i < 260; i++) { g.fillStyle = 'rgba(255,255,255,' + Math.random() * .25 + ')'; g.fillRect(Math.random() * W, Math.random() * H, 8, 2); }
+    txt(S.cam ? 'NO SIGNAL' : 'CAMERA OFF', W / 2, H / 2, '#92a89f', 'center'); return;
+  }
+  const n = S.batch ? S.batch.eggs : 0, d = S.day;
+  if (!n) txt('No eggs loaded', W / 2, H / 2, '#92a89f', 'center');
+  else {
+    const cols = n <= 24 ? 8 : n <= 36 ? 9 : 12, rows = Math.ceil(n / cols), cw = (W - 28) / cols, ch = (H - 54) / rows;
+    const rx = Math.min(cw * .4, ch * .34), ry = rx * 1.3;
+    for (let i = 0; i < n; i++) {
+      const x = 14 + cw * (i % cols + .5), y = 30 + ch * (Math.floor(i / cols) + .5), clear = i % 11 === 5;
+      g.save(); g.translate(x, y);
+      const gr = g.createRadialGradient(0, 0, 1, 0, 0, ry);
+      if (S.camLight) { gr.addColorStop(0, '#ffe3a3'); gr.addColorStop(1, '#d98a2b'); } else { gr.addColorStop(0, '#4a4234'); gr.addColorStop(1, '#241f18'); }
+      g.fillStyle = gr; g.beginPath(); g.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2); g.fill();
+      if (S.camLight && !clear && d > 1) {
+        const k = Math.min(1, d / 18), w = d >= 12 ? Math.sin(t * 3 + i) * rx * .08 : 0;
+        if (d >= 4 && d < 14) { g.strokeStyle = 'rgba(150,30,20,.7)'; g.lineWidth = .7; for (let j = 0; j < 4; j++) { g.beginPath(); g.moveTo(0, ry * .15); g.lineTo(Math.cos(j * 1.6 + i) * rx * .8, Math.sin(j * 1.6 + i) * ry * .7); g.stroke(); } }
+        g.fillStyle = 'rgba(70,20,10,' + (.25 + k * .6) + ')';
+        g.beginPath(); g.ellipse(w, ry * .15, rx * (.25 + k * .6), ry * (.2 + k * .6), 0, 0, Math.PI * 2); g.fill();
+      }
+      g.restore();
+    }
+  }
+  g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(0, (t * 40) % H, W, 3);
+  g.fillStyle = Math.floor(t * 2) % 2 ? '#ff4d4d' : 'rgba(255,77,77,.25)'; g.beginPath(); g.arc(14, 14, 4, 0, Math.PI * 2); g.fill();
+  txt('LIVE · CAM 1', 24, 18); txt(now(), W - 10, 18, '#d7f5e6', 'right');
+  txt(S.t.toFixed(1) + '°C  ' + Math.round(S.h) + '%', 10, H - 8); txt(S.batch ? 'Day ' + d + ' · ' + n + ' eggs' : 'INC-001', W - 10, H - 8, '#d7f5e6', 'right');
+}
+(function camLoop() { camDraw(); requestAnimationFrame(camLoop); })();
+
 /* ---------- Views ---------- */
 const lockView = () => `<div class="lock"><div class="ghost">${PWR(40)}</div><h2>Incubator is off</h2><p>Press the power button below to connect SmartHatch to your incubator. Your home, controls, database and reports appear once it is on.</p></div><div class="sk"></div><div class="sk s2"></div><div class="sk s3"></div>`;
 const ring = (v, mn, mx, c, txt, l, tg) => { const f = Math.max(0, Math.min(1, (v - mn) / (mx - mn))); return `<div class="card tile"><svg viewBox="0 0 100 100" width="108" height="108" role="img" aria-label="${l} ${txt}"><circle cx="50" cy="50" r="38" fill="none" stroke="var(--line)" stroke-width="9"/><circle cx="50" cy="50" r="38" fill="none" stroke="${c}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(f * 238.8).toFixed(1)} 238.8" transform="rotate(-90 50 50)"/><text x="50" y="56" text-anchor="middle" font-size="19" font-weight="800" fill="var(--ink)" font-family="Manrope,system-ui">${txt}</text></svg><div style="font-weight:800;font-size:13px">${l}</div><div class="l">Target ${tg}</div></div>`; };
@@ -124,7 +177,7 @@ function home() {
   const b = Math.round(S.bat);
   return `${S.wifi ? '' : `<div class="card" style="border-color:var(--bad)"><b style="color:var(--bad)">Incubator offline</b><p class="mut" style="font-size:12px;margin-top:4px">Showing last data from ${ago()}. The incubator keeps running on its own set points. Commands resume when it reconnects.</p></div>`}${hero}
 <div class="grid">${ring(S.t, 20, 40, 'var(--heat)', S.t.toFixed(1) + '°', 'Temperature', st ? st + '°C' : '—')}${ring(S.h, 0, 100, 'var(--acc)', Math.round(S.h) + '%', 'Humidity', sh ? sh + '%' : '—')}</div>
-<div class="card"><h3>Temperature and humidity</h3>${chart()}</div>${tl}
+${camCard()}<div class="card"><h3>Temperature and humidity</h3>${chart()}</div>${tl}
 <div class="card"><h3>System status</h3>
 <div class="row item"><span>Power source</span>${chip(S.mains ? 'Mains' : 'Battery', S.mains ? 'ok' : 'bad')}</div>
 <div class="item"><div class="row"><span>Backup battery</span><b>${b}%</b></div><div class="batt"><i style="width:${b}%;background:${b < TH.blow ? 'var(--bad)' : 'var(--ok)'}"></i></div><p>${S.mains ? 'Charging from mains' : '~' + (S.bat / 100 * 8).toFixed(1) + ' h of backup left'}</p></div>
@@ -186,7 +239,7 @@ function render(live) {
   head(); if (live && (S.tab === 'ctrl' || S.tab === 'set')) return;
   const m = $('main'), y = m.scrollTop;
   m.innerHTML = (!S.on && S.tab !== 'set') ? lockView() : VIEW[S.tab]();
-  m.scrollTop = y;
+  m.scrollTop = y; camDraw();
 }
 function go(k) {
   S.tab = k; $('main').scrollTop = 0; render(); enter();
