@@ -95,4 +95,7 @@ main.enter .meter i,main.enter .bar i,main.enter .batt i{animation:gw .9s .2s ea
 main.enter polyline{stroke-dasharray:600;animation:dr 1.1s .2s ease-out both}
 main.enter svg circle+circle{animation:rg 1s .2s ease-out both}
 #login:not(.off)>*{animation:up .5s cubic-bezier(.2,.8,.3,1) both}
-#ready:not(.off)>:nth-child(n+2){an
+#ready:not(.off)>:nth-child(n+2){animation:up .5s cubic-bezier(.2,.8,.3,1) both}
+
+/* camera */
+.cam{border-radius:12px;overflow:hidden;background:#05100d;margin-top:10px}.cam canvas{display:block;width:100%;height:auto}
