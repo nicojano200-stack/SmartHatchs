@@ -7,6 +7,8 @@
 <title>SmartHatch · IoT Egg Incubator App</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css?v=3">
+<!-- ADDED: PWA manifest -->
+<link rel="manifest" href="manifest.json">
 </head>
 <body>
 <div class="phone">
@@ -63,5 +65,9 @@
   <div class="toast off" id="toast"></div>
 </div>
 <script src="app.js?v=3"></script>
+<!-- ADDED: offline support -->
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+</script>
 </body>
 </html>
