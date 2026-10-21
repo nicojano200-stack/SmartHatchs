@@ -1,0 +1,8 @@
+{
+  "name": "SmartHatch",
+  "short_name": "SmartHatch",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f4a47",
+  "theme_color": "#1b7f79"
+}
